@@ -55,7 +55,7 @@ modelObj = models.load_model(model = modelTopology,
 print('Loading {} weights into {} topology'.format(modelName, modelTopology))
 modelObj.load_weights(os.path.expanduser(MODELS_PATH + modelName + '.h5'))
 
-# Compute Mean Saliency Map over training set
-print('Computing Mean Saliency Map (MSM)')
+# Compute mean saliency map over training set
+print('Computing mean saliency map')
 utils.computeMSM(modelObj=modelObj, modelName=modelName,
                  dimRow=dimRow, dimCol=dimCol, xData=x)

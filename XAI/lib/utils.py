@@ -346,7 +346,7 @@ def getMonthIndices(month, year):
 
     return indices
 
-# Compute Mean Saliency Map (MSM) over training set
+# Compute the mean saliency map over training set
 def computeMSM(modelObj, modelName, dimRow, dimCol, xData):
 
     # Get proper neuron index w.r.t. the model
