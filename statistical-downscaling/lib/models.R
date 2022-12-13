@@ -15,7 +15,7 @@ load_model <- function(model, input_shape, output_shape) {
           outputs = layer_dense(l4, units = output_shape)
           model <- keras_model(inputs = inputs, outputs = outputs)},
 
-        # CNN-PAN
+        # CNN-PAN 
         CNNPan = { 
           inputs <- layer_input(shape = input_shape)
           x = inputs
@@ -35,7 +35,8 @@ load_model <- function(model, input_shape, output_shape) {
 
           l4 = layer_flatten(l3_new)
 
-          d1 = layer_dense(l4, units = round(output_shape / 2))
+          d1 = layer_dense(l4, units = round(output_shape / 2),
+                           activation = 'relu')
 
           outputs = layer_dense(d1, units = output_shape)
           model <- keras_model(inputs = inputs, outputs = outputs)},
