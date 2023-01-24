@@ -1,6 +1,6 @@
-# Using Explainability to Inform Deep Statistical Climate Downscaling Beyond Standard Validation Approaches
+# Using Explainability to Inform Statistical Downscaling Based on Deep Learning Beyond Standard Validation Approaches
 
-This repository contains the code to reproduce the paper *Using Explainability to Inform Deep Statistical Climate Downscaling Beyond Standard Validation Approaches*.
+This repository contains the code to reproduce the paper *Using Explainability to Inform Statistical Downscaling Based on Deep Learning Beyond Standard Validation Approaches*.
 
 ### Installation
 To properly reproduce the environments necessary to run the experiments we rely on Docker. We provide two Dockerfiles with all the required libraries to download the data, train the models, compute the predictions ([Dockerfile_SD](https://github.com/jgonzalezab/XAI-metrics-North-America/blob/main/docker/Dockerfile_SD)) and compute the saliency maps ([Dockerfile_XAI](https://github.com/jgonzalezab/XAI-metrics-North-America/blob/main/docker/Dockerfile_XAI)). Inside the corresponding generated images we can find useful libraries on which we rely to run the experiments conforming this paper.
