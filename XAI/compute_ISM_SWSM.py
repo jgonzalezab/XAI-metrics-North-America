@@ -61,13 +61,12 @@ print('Loading {} weights into {} topology'.format(modelName, modelTopology))
 modelObj.load_weights(os.path.expanduser(MODELS_PATH + modelName + '.h5'))
 
 # Compute XAI metrics for all the gridpoints (neurons) for an specific day
-# print('Computing Integrated Saliency Map (ISM)')
-# utils.computeISM(modelObj=modelObj, modelName=modelName,
-#                  xData=x, neuronsIdx=neuronsIdx,
-#                  month=month, year=year)
+print('Computing Integrated Saliency Map (ISM)')
+utils.computeISM(modelObj=modelObj, modelName=modelName,
+                 xData=x, neuronsIdx=neuronsIdx,
+                 month=month, year=year)
 
 print('Computing Spatially Weighted Saliency Map (SWSM)')
 utils.computeSWSM(modelObj=modelObj, modelName=modelName,
                   xData=x, neuronsIdx=neuronsIdx,
-                  month=month, year=year,
-                  var='ta@1000')
+                  month=month, year=year)

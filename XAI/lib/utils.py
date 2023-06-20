@@ -346,7 +346,7 @@ def getMonthIndices(month, year):
 
     return indices
 
-# Compute the mean saliency map over training set
+# Compute the mean saliency map 
 def computeMSM(modelObj, modelName, dimRow, dimCol, xData):
 
     # Get proper neuron index w.r.t. the model
@@ -381,18 +381,25 @@ def computeMSM(modelObj, modelName, dimRow, dimCol, xData):
         # Compute raw SM
         saliencyMaps[i:i+batchSize, :] = analyzer.analyze(xData[i:i+batchSize, :, :, :], neuronIdx)
         
-        # Compute absolute value and divide by the maximum value
+        # Absolute value
         saliencyMaps[i:i+batchSize, :] = np.abs(saliencyMaps[i:i+batchSize, :])
-        saliencyMaps[i:i+batchSize, :] = saliencyMaps[i:i+batchSize, :] / np.max(saliencyMaps[i:i+batchSize, :])
 
-    # Filter noise
-    saliencyMaps[saliencyMaps < 0.1] = 0
+        # Divide by maximum
+        saliencyMaps[i:i+batchSize, :] = saliencyMaps[i:i+batchSize, :] / np.max(saliencyMaps[i:i+batchSize, :])
+        
+        # Filter SMs
+        GSbound = 0.1
+        saliencyMaps[saliencyMaps < GSbound] = 0
+        
+        # Divide by sum
+        saliencyMaps[i:i+batchSize, :] = saliencyMaps[i:i+batchSize, :] / np.sum(saliencyMaps[i:i+batchSize, :])
 
     # Compute mean of saliency maps
     saliencyMaps = np.mean(saliencyMaps, axis=0)
 
     # Save saliencyMaps as npy
-    np.save(file = XAI_PATH + 'SM_MSM_' + modelName + '_dimRow' + str(dimRow) + '_dimCol' + str(dimCol) + '.npy',
+    np.save(file = XAI_PATH + 'SM_MSM_' + modelName + '_dimRow' + str(dimRow) + '_dimCol' + str(dimCol) + \
+                   '_GSbound' + str(GSbound) + '.npy',
             arr = saliencyMaps)
 
 # Compute Integrated Saliency Map (ISM)
@@ -424,28 +431,38 @@ def computeISM(modelObj, modelName, xData, neuronsIdx, month, year):
         idxAux = 0
         for i in neuronsIdx:
             
+            # Compute SM
             SMs = analyzer.analyze(np.expand_dims(xData[elem, :, :, :], axis=0), i)
+            
+            # Absolute value
             SMs = np.absolute(SMs)
             
+            # Divide by maximum
             SMs = SMs / np.max(SMs)
 
             # Filter SMs
-            SMs[SMs < 0.1] = 0
+            GSbound = 0.1
+            SMs[SMs < GSbound] = 0
+
+            # Divide by sum
+            SMs = SMs / np.sum(SMs)
 
             saliencyMapAgg[idxAux, :, :, :] = SMs
             idxAux = idxAux + 1
 
-        saliencyMapAgg = np.mean(saliencyMapAgg, axis=0)
+        # Accumulate
+        saliencyMapAgg = np.sum(saliencyMapAgg, axis=0)
         saliencyMapMonth[idx, :, :, :] = saliencyMapAgg
 
+    # Aggregate
     ISM_metric = np.mean(saliencyMapMonth, axis=0)
 
     # Save saliencyMaps as npy
-    np.save(file = XAI_PATH + 'SM_ISM_' + modelName + '_' + month + '_' + year + '.npy',
+    np.save(file = XAI_PATH + 'SM_ISM_' + modelName + '_' + month + '_' + year + '_GSbound' + str(GSbound) + '.npy',
             arr = ISM_metric)
 
 # Compute Spatially Weighted Saliency Map (SWSM)
-def computeSWSM(modelObj, modelName, xData, neuronsIdx, month, year, var):
+def computeSWSM(modelObj, modelName, xData, neuronsIdx, month, year):
 
     # Compute index data if it is not already computed
     if not os.path.isfile(XAI_PATH + 'neuronsPalette_CNN_UNET.npy') or not os.path.isfile(XAI_PATH + 'neuronsPalette_CNNs.npy'):
@@ -458,12 +475,6 @@ def computeSWSM(modelObj, modelName, xData, neuronsIdx, month, year, var):
                'ta@500', 'ta@700', 'ta@850', 'ta@1000',
                'ua@500', 'ua@700', 'ua@850', 'ua@1000',
                'va@500', 'va@700', 'va@850', 'va@1000']
-
-    # Select the index of the provided variable
-    if var not in allVars:
-        raise ValueError('Please provide a valid variable')
-    else:
-        varIdx = allVars.index(var)
 
     # Iterate over all neurons to avoid issues when inserting the SWSM
     # values in the Y array
@@ -491,19 +502,28 @@ def computeSWSM(modelObj, modelName, xData, neuronsIdx, month, year, var):
         metricPerNeuron = []
 
         for i in fullNeuronIdxs:
-            if i in neuronsIdx:
 
+            if i in neuronsIdx:
+                
                 # Compute relative saliency map
                 SMsMean = analyzer.analyze(np.expand_dims(xData[elem, :, :, :], axis=0), i)
+                
+                # Absolute value
                 SMsMean = np.absolute(SMsMean)
                 
+                # Divide by maximum
                 SMsMean = SMsMean / np.max(SMsMean)
 
                 # Filter SMs
-                SMsMean[SMsMean < 0.1] = 0
+                GSbound = 0.1
+                SMsMean[SMsMean < GSbound] = 0
 
-                # Select the proper variable
-                SMsMean = SMsMean[0, :, :, varIdx]
+                # Divide by sum
+                SMsMean = SMsMean / np.sum(SMsMean)
+
+                # Sum all variables
+                SMsMean = SMsMean[0, :, :, :]
+                SMsMean = np.sum(SMsMean, axis=2)
 
                 # Compute distances array (haversine distance)
                 coordsX = np.load(XAI_PATH + 'coordsX.npy')
@@ -528,6 +548,10 @@ def computeSWSM(modelObj, modelName, xData, neuronsIdx, month, year, var):
 
                 # Compute metric
                 metricSM = np.nansum(SMsMean * haversineDistance)
+
+                # Express in kilometers
+                earthRadius = 6371
+                metricSM = metricSM * earthRadius
                 
             else:
                 metricSM = np.nan
@@ -545,5 +569,40 @@ def computeSWSM(modelObj, modelName, xData, neuronsIdx, month, year, var):
     SWSM_metric = np.nanmean(saliencyMapMonth, axis=0)
 
     # Save saliencyMaps as npy
-    np.save(file = XAI_PATH + 'SM_SWSM_' + modelName + '_' + var + '_' + month + '_' + year + '.npy',
+    np.save(file = XAI_PATH + 'SM_SWSM_' + modelName + '_' + month + '_' + year + '_GSbound' + str(GSbound) + '.npy',
             arr = SWSM_metric)
+
+# Compute raw SM
+def computeRawSM(modelObj, modelName, xData, neuronsIdx, month, year):
+    
+    # Set batch size for computing the SMs
+    # Can't increase batchSize above 1 due to an existing bug in iNNvestigate
+    # https://github.com/albermax/innvestigate/issues/246
+    batchSize = 1
+
+    # Create analyzer
+    analyzer = innvestigate.create_analyzer(name = 'integrated_gradients',
+                                            model = modelObj,
+                                            neuron_selection_mode = 'index')
+
+    # Get month indices
+    indicesMonth = getMonthIndices(year=year, month=month)
+
+    # Compute raw saliency maps
+    for idx, elem in tqdm(enumerate(indicesMonth), total=len(indicesMonth)):
+
+        # Pre-allocate memory for the saliencyMaps array
+        saliencyMaps = np.empty((len(neuronsIdx),
+                                 xData.shape[1], xData.shape[2], xData.shape[3]))
+
+        for idx2, i in enumerate(neuronsIdx):
+            
+            # Compute SM
+            SMs = analyzer.analyze(np.expand_dims(xData[elem, :, :, :], axis=0), i)
+
+            saliencyMaps[idx2, :, :, :] = SMs
+
+        # Save saliencyMaps as npy
+        np.save(file = XAI_PATH + 'rawSM_' + modelName + '_' + month + '_' + year + '_' + str(idx) + '.npy',
+                arr = saliencyMaps)
+        print(idx)

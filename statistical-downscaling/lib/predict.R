@@ -68,6 +68,10 @@ predictTrain <- function(xTrain, yTrain, modelName, region=NULL) {
                                	 	     C4R.template = yTrain,
                                	 	     clear.session = TRUE)
 
+    # Save xyT object to compute predictions with LR model
+    save(xyT_train,
+         file = paste0(DATA_PATH_SD, 'xyT_', modelName, '_train.rda'))
+
     # Save the prediction as netCDF
     grid2nc(predsTrain, NetCDFOutFile = paste0(DATA_PATH_SD, 'predsTrain_',
                                                modelName, '.nc4'))
@@ -113,6 +117,10 @@ predictTest <- function(xTrain, yTrain, xTest, yTest, modelName) {
                                	 	    loss = 'mse',
                                	 	    C4R.template = yTrain,
                                	 	    clear.session = TRUE)
+
+    # Save xyT object to compute predictions with LR model
+    save(xyT_test,
+         file = paste0(DATA_PATH_SD, 'xyT_', modelName, '_test.rda'))
 
     # Save the prediction as netCDF
     grid2nc(predsTest, NetCDFOutFile = paste0(DATA_PATH_SD, 'predsTest_',
@@ -165,6 +173,10 @@ predictGCM_Hist <- function(xTrain, yTrain, modelName) {
                                	 	        loss = 'mse',
                                	 	        C4R.template = yTrain,
                                	 	        clear.session = TRUE)
+
+    # Save xyT object to compute predictions with LR model
+    save(xyT_GCM_Hist,
+         file = paste0(DATA_PATH_SD, 'xyT_', modelName, '_GCM_Hist.rda'))
 
     # Save the prediction as netCDF
     grid2nc(predsGCM_Hist, NetCDFOutFile = paste0(DATA_PATH_SD, 'predsGCM_Hist_',
@@ -228,6 +240,10 @@ predictGCM_Fut <- function(xTrain, yTrain, modelName) {
                                                loss = 'mse',
                                                C4R.template = yTrain,
                                                clear.session = TRUE)
+
+        # Save xyT object to compute predictions with LR model
+        save(xyT_GCM_Fut,
+            file = paste0(DATA_PATH_SD, 'xyT_', modelName, '_GCM_Fut_', period, '.rda'))
 
         # Save the prediction as netCDF
         grid2nc(predsGCM_Fut, NetCDFOutFile = paste0(DATA_PATH_SD, 'predsGCM_Fut_',

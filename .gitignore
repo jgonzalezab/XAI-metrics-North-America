@@ -19,3 +19,5 @@
 .ipynb_checkpoints
 .cluster-log
 .dask-work-space
+figures/
+*.joblib
